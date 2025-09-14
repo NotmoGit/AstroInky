@@ -1,0 +1,46 @@
+[about]
+# Image to display on the about screen. Must be SVG format
+image: icons/heart.svg
+# Top line on the about screen. Shown in black text, 24pt
+top_msg: You should edit config.ini
+# Middle line on the about screen. Shown in red text, 18pt
+mid_msg: and change the text of these
+# Lower line on the about screen. Shown in green text, 18pt
+low_msg: to whatever you would like!
+# Optionally show the WiFi SSID on the about screen
+show_wifi: y
+# Optionally show the WiFi IP address on the about screen
+show_ip: y
+
+[global]
+# Do you have a Waveshare UPS HAT fitted?
+# If so enabling this shows the battery display top right of all screens
+# It will shut down the pi if the battery gets too low
+# and the battery level is displayed in text on the about screen
+use_battery: y
+# Enable this to show a timestamp of when the screen last updated
+# This appears in the bottom right of each screen
+show_timestamp: y
+
+[location]
+# Do you have a Pimoroni GPS breakout fitted?
+# If so enabling this will allow AstroInky to set all location settings
+# automatically
+use_gps: y
+# If you do not have the GPS module, set use_gps: n
+# and manually set the 3 values below
+latitude: 0.00
+longitude: 0.00
+elevation: 0
+
+[path]
+# Enter the path that AstroInky is installed in
+astro_path: /opt/astroinky
+
+[picture]
+# Enter your NASA API key here
+nasa_api_key: xz
+# Enter the NASA API URL here - normally does not need changing
+nasa_api_url: https://api.nasa.gov/planetary/apod
+# Where to save the NASA image
+pic_save_path: /opt/astroinky/apod_picture.jpg

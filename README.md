@@ -2,9 +2,7 @@
 
 A Python project for Raspberry Pi that displays various astronomical information pages on a **6-color Inky Impression e-ink display**, using **PyEphem** for precise astronomical calculations.
 
-This is currently not a particularly easy project to customise - mainly because this is my first real python/Inky project and I didn't write it with other people using it in mind. However, it is possible if you follow the steps in the Customising section
-
-ChatGPT (OpenAI) was used fairly extensively to write and debug and, as such, the commenting is a bit sporadic and inconsistent.
+This project was forked from the great starting point (with all the difficult maths already done) here: https://github.com/NotmoGit/AstroInky
 
 ## ✨ Features
 
@@ -15,6 +13,8 @@ ChatGPT (OpenAI) was used fairly extensively to write and debug and, as such, th
 - Displays **visible stars and planets** (updates on refresh)
 - Renders an accurate visual representation of the **solar system** with the planets in their approximate current positions
 - Shows an **"About"** page with a personal message
+- Supports the Waveshare UPS HAT to make AstroInky portable
+- Supports the Pimoroni GPS breakout to allow AstroInky to set itself up automatically
 
 ### Long Button Press Functions
 
@@ -32,6 +32,8 @@ ChatGPT (OpenAI) was used fairly extensively to write and debug and, as such, th
 - Raspberry Pi (any model with GPIO support)
 - [Inky Impression (7-color, 5.7")](https://shop.pimoroni.com/products/inky-impression-5-7)
 - SD card, power supply, and network access for the Pi
+- Optionally, the Waveshare UPS HAT
+- Optionally, the Pimoroni GPS breakout
 
 ---
 
@@ -44,7 +46,10 @@ ChatGPT (OpenAI) was used fairly extensively to write and debug and, as such, th
 - `gpiozero`
 
 ---
+## Installation
 
+- See SETUP.md for instructions
+---
 ## ▶️ Usage
 
 A `systemd` service runs on startup, activates a virtual environment, and executes `handler.py` (which in turn launches `about.py` as the startup screen).
@@ -55,21 +60,13 @@ Long-pressing the **A** button (which, unintuitively, is on the right side) will
 
 ## ⚙️ Customising
 
-- **Location**: Set your latitude, longitude, elevation, and timezone in `moon.py`, `solar.py`, and `stars.py` (anywhere PyEphem is used).
-- **NASA API**: You’ll need an API key for `picture.py`. Sign up at [api.nasa.gov](https://api.nasa.gov).
-- **Pi Pins**: The button GPIO pins are mapped for the Raspberry Pi Zero W. If you're using another model, update them in `handler.py`.
-- **Custom Message**: The #image and #message sections in about.py need to be updated
-- **Absolute Paths**: There are a number of absolute paths which you will need to change (instructions.py, moon.py, picture.py, ) - search for /home/path/to
-- **Font**: The scripts call an absolute path to a font - you will need to update every script if you want to change it
-- **AutoRun**: You need to create a systemmd file to run at boot to load the venv and run handler.py - the example is incldued but you will need to change the path and username under "[Service]"
-- **Instructions**: These just show the button mapping - you can expand on this (or replace it entirely - you'll need to understand and edit handler.py)
+- **Location, NASA API, Custom Messages** are all set in config.ini
+- Hardware support is also set in config.ini
 ---
 
 ## 🛠️ To Do
 
-- Move shared functions to a single utility script (e.g., text/font/icon handling, navigation buttons, image processing)
 - Create a centralized positioning/layout system
-- Replace all personal data with placeholders or move them into a config file
 - Fix all the commenting
 
 ## 🖨️ 3D Printed Case

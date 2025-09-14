@@ -1,0 +1,4 @@
+All icons from:
+https://github.com/erikflowers/weather-icons
+except battery icons from:
+https://icons.getbootstrap.com/icons/

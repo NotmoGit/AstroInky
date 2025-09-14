@@ -1,0 +1,2 @@
+astrouser ALL=(ALL) NOPASSWD: /sbin/poweroff, /sbin/reboot, /sbin/shutdown
+

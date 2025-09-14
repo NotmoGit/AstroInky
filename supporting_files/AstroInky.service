@@ -1,0 +1,16 @@
+[Unit]
+Description=AstroInky Handler
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/opt/astroinky/bin/python3 /opt/astroinky/AstroInky/handler.py
+WorkingDirectory=/opt/astroinky/AstroInky
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=astrouser
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
