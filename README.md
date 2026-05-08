@@ -4,73 +4,254 @@ A Python project for Raspberry Pi that displays various astronomical information
 
 This is currently not a particularly easy project to customise - mainly because this is my first real python/Inky project and I didn't write it with other people using it in mind. However, it is possible if you follow the steps in the Customising section
 
-ChatGPT (OpenAI) was used fairly extensively to write and debug and, as such, the commenting is a bit sporadic and inconsistent.
+AI (ChatGPT/Claude) was used fairly extensively to write and debug and, as such, the commenting can be a bit sporadic and inconsistent. This was a learning project, not just "vibe-coded".
+
+---
 
 ## ✨ Features
 
-- Button-driven interface using the Inky Impression’s 4 hardware buttons
-- Shows the current **moon phase** as an image, as well as:
-  - Moonrise & moonset times
-  - Azimuth and altitude of the moon (based on a configurable latitude/longitude)
-- Displays **visible stars and planets** (updates on refresh)
-- Renders an accurate visual representation of the **solar system** with the planets in their approximate current positions
-- Shows an **"About"** page with a personal message
+**Short press functions:**
+- Current **moon phase** image with phase name, moonrise & moonset times, and azimuth/altitude
+- Visual **solar system diagram** with all eight planets in their approximate current positions
+- List of currently **visible stars and planets** with magnitude, altitude, and azimuth
+- **About** page with a personal message
 
-### Long Button Press Functions
+**Long press functions:**
+- Random **NASA Astronomy Picture of the Day** with title and description
+- Random **named moon** of a solar system planet with facts
+- **Instructions** page showing the button map
+- **Shutdown** — displays a message and powers the Pi off safely
 
-- Pulls a **random NASA Astronomy Picture of the Day** (with title and description)
-- Displays a **random named moon** of a planet with fun facts
-- **Shuts the system down** and displays a shutdown message
-- Shows an **"Instructions"** page
-
-> Everything is designed to be displayed in **portrait** orientation (not landscape)
+> Everything is designed to display in **portrait** orientation.
 
 ---
 
-## 🔧 Hardware Requirements
+## 🔧 Hardware
 
-- Raspberry Pi (any model with GPIO support)
-- [Inky Impression (7-color, 5.7")](https://shop.pimoroni.com/products/inky-impression-5-7)
-- SD card, power supply, and network access for the Pi
+| Component | Details |
+|---|---|
+| Computer | Raspberry Pi Zero W |
+| Display | [Pimoroni Inky Impression Spectra 7.3 (6-colour e-ink)](https://shop.pimoroni.com/products/inky-impression-7-3) |
+| Storage | microSD card, 8GB minimum |
+| Power | 5V micro-USB |
 
----
-
-## 🧰 Software Requirements and Dependencies
-
-- Python 3.7+
-- [PyEphem](https://pypi.org/project/ephem/)
-- [Pillow](https://pypi.org/project/Pillow/)
-- [Pimoroni Inky library](https://github.com/pimoroni/inky/)
-- `gpiozero`
+The Inky Impression connects directly to the Pi's 40-pin GPIO header. No soldering required.
 
 ---
 
-## ▶️ Usage
+## 🗂️ Project Structure
 
-A `systemd` service runs on startup, activates a virtual environment, and executes `handler.py` (which in turn launches `about.py` as the startup screen).
+```
+AstroInky/
+├── config.py           # All settings — location, paths, font sizes, API key
+├── display_utils.py    # Shared display setup: colours, fonts, nav bar, show()
+├── astro_utils.py      # Shared astronomy helpers: observer, moon phase, time
+├── handler.py          # Button handler and auto-refresh scheduler
+│
+├── moon.py             # Moon phase screen
+├── solar.py            # Solar system diagram screen
+├── stars.py            # Stars and planets screen
+├── othermoons.py       # Random moon facts screen
+├── picture.py          # NASA Astronomy Picture of the Day screen
+├── about.py            # About / birthday message screen
+├── instructions.py     # Button reference screen
+├── shutdown.py         # Shutdown confirmation screen
+│
+├── fonts/
+│   └── Merriweather-VariableFont_opsz,wdth,wght.ttf
+├── icons/              # SVG navigation and data icons
+├── phases/             # Moon phase PNG images
+├── pics/               # Local photos
+├── moons.json          # Solar system moon facts database
+├── creds.txt           # NASA API key (do not commit this)
+└── face.jpg            # Photo shown on instructions screen
+```
 
-Long-pressing the **A** button (which, unintuitively, is on the right side) will **shut down** the system and display a shutdown message.
+---
+
+## 🕹️ Button Map
+
+The display sits in portrait orientation. Buttons run left to right across the bottom edge. Note that **Button A is on the right**, which is counterintuitive.
+
+| Button | Short Press | Long Press (hold 2s) |
+|---|---|---|
+| D (leftmost) | Moon phase | Instructions |
+| C | Stars & planets | Moon facts |
+| B | Solar system | Astronomy picture |
+| A (rightmost) | About screen | **Shutdown** |
+
+The display auto-refreshes the current screen every hour.
+
+---
+
+## 🧰 Dependencies
+
+| Package | Purpose |
+|---|---|
+| `inky[rpi]` | Pimoroni Inky Impression display driver |
+| `Pillow` | Image composition and drawing |
+| `ephem` | Astronomical calculations |
+| `cairosvg` | SVG icon rendering |
+| `gpiozero` | Button input via GPIO |
+| `requests` | NASA APOD API calls |
+
+---
+
+## ▶️ Installation
+
+### 1. Flash the SD card
+
+Download [Raspberry Pi Imager](https://www.raspberrypi.com/software/) and flash **Raspberry Pi OS Lite (32-bit)** to your SD card. In the Imager settings (gear icon), configure:
+
+- Hostname: `astroInky` (or whatever you prefer)
+- Enable SSH
+- Your WiFi credentials
+- Timezone: your local timezone
+
+### 2. Boot and connect
+
+Insert the SD card, power on the Pi, wait ~90 seconds, then SSH in:
+
+```bash
+ssh youruser@astroInky.local
+```
+
+### 3. Update the system
+
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+### 4. Enable SPI and I2C
+
+```bash
+sudo raspi-config
+```
+
+Navigate to **Interface Options** and enable both **SPI** and **I2C**. Reboot when prompted.
+
+### 5. Fix the SPI chip-select conflict
+
+The Inky library needs to manage the SPI chip select pin itself. Edit the boot config:
+
+```bash
+sudo nano /boot/firmware/config.txt
+```
+
+> On older Pi OS versions this may be `/boot/config.txt` instead.
+
+Replace `dtparam=spi=on` with:
+
+```
+dtoverlay=spi0-0cs
+```
+
+Reboot.
+
+### 6. Install system dependencies
+
+```bash
+sudo apt install -y \
+  python3-pip \
+  python3-pil \
+  libcairo2-dev \
+  libffi-dev \
+  libjpeg-dev \
+  libopenjp2-7 \
+  i2c-tools
+```
+
+### 7. Transfer project files
+
+Run this from your computer in the folder containing the project:
+
+```bash
+scp -r AstroInky youruser@astroInky.local:/home/youruser/
+```
+
+### 8. Add your NASA API key
+
+Create `creds.txt` in the project folder containing just your key:
+
+```bash
+echo "YOUR_NASA_API_KEY" > /home/youruser/AstroInky/creds.txt
+```
+
+Get a free key at [api.nasa.gov](https://api.nasa.gov/).
+
+### 9. Install Python packages
+
+```bash
+pip3 install inky[rpi] pillow cairosvg ephem requests gpiozero --break-system-packages
+```
+
+### 10. Test it
+
+```bash
+cd /home/youruser/AstroInky
+python3 moon.py
+```
+
+The display should update with the current moon phase.
+
+### 11. Autostart on boot
+
+Create a systemd service:
+
+```bash
+sudo nano /etc/systemd/system/astroInky.service
+```
+
+Paste (updating the username and path):
+
+```ini
+[Unit]
+Description=AstroInky Display
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/youruser/AstroInky/handler.py
+WorkingDirectory=/home/youruser/AstroInky
+User=youruser
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable and start:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable astroInky
+sudo systemctl start astroInky
+```
 
 ---
 
 ## ⚙️ Customising
 
-- **Location**: Set your latitude, longitude, elevation, and timezone in `moon.py`, `solar.py`, and `stars.py` (anywhere PyEphem is used).
-- **NASA API**: You’ll need an API key for `picture.py`. Sign up at [api.nasa.gov](https://api.nasa.gov).
-- **Pi Pins**: The button GPIO pins are mapped for the Raspberry Pi Zero W. If you're using another model, update them in `handler.py`.
-- **Custom Message**: The #image and #message sections in about.py need to be updated
-- **Absolute Paths**: There are a number of absolute paths which you will need to change (instructions.py, moon.py, picture.py, ) - search for /home/path/to
-- **Font**: The scripts call an absolute path to a font - you will need to update every script if you want to change it
-- **AutoRun**: You need to create a systemmd file to run at boot to load the venv and run handler.py - the example is incldued but you will need to change the path and username under "[Service]"
-- **Instructions**: These just show the button mapping - you can expand on this (or replace it entirely - you'll need to understand and edit handler.py)
----
+All the settings you're likely to want to change are in `config.py` — you shouldn't need to touch any other file for basic customisation.
+
+```python
+# Your location
+LATITUDE   = "38.8977"
+LONGITUDE  = "77.03 65"
+ELEVATION  = 15
+TIMEZONE   = "Europe/London"
+UTC_OFFSET = 0
+
+# Font sizes
+FONT_SIZE       = 18
+FONT_SIZE_LARGE = 24
+```
 
 ## 🛠️ To Do
 
-- Move shared functions to a single utility script (e.g., text/font/icon handling, navigation buttons, image processing)
-- Create a centralized positioning/layout system
-- Replace all personal data with placeholders or move them into a config file
-- Fix all the commenting
+- Commenting is still inconsistent across files
+- The `stars.py` screen can overflow if many objects are visible simultaneously — a scroll or truncation mechanism would help
+- The solar system diagram orbit radii are hand-tuned for this specific display size and may need adjustment for other Inky models
 
 ## 🖨️ 3D Printed Case
 
@@ -82,3 +263,16 @@ Long-pressing the **A** button (which, unintuitively, is on the right side) will
   - [Printables: Inky Impression Spectra 7.3 Case](https://www.printables.com/model/1363758-inky-impression-spectra-73-case)
   - [MakerWorld: Inky Impression Spectra 7.3 Case](https://makerworld.com/en/models/1634076-inky-impression-spectra-7-3-case)
 
+
+## 🔭 Astronomical Data
+
+All positions and times are calculated locally using [PyEphem](https://rhodesmill.org/pyephem/). All times displayed are in local time (configured in `config.py`). Moon phase and moonrise/moonset accuracy has been verified against [timeanddate.com](https://www.timeanddate.com) and independent calculators.
+
+---
+
+## 📄 Credits
+
+- Astronomy calculations — [PyEphem](https://rhodesmill.org/pyephem/)
+- Space images — [NASA APOD API](https://api.nasa.gov/)
+- Font — [Merriweather](https://fonts.google.com/specimen/Merriweather) (Google Fonts, OFL licence)
+- Icons — custom SVG
